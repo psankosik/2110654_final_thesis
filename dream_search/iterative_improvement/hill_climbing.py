@@ -17,11 +17,18 @@ class HillClimbingCV(BaseParameterSearch):
         n_jobs: Optional[int] = None, 
         cv: Optional[int] = None, 
         n_repeats: int = 1, 
+        compare_mode: str = "max",
         random_state: int = 42
     ) -> None:
         super().__init__(
-            estimator, param_grid, scoring, n_jobs, 
-            cv, n_repeats, random_state)
+            estimator=estimator,
+            param_grid=param_grid,
+            scoring=scoring,
+            n_jobs=n_jobs,
+            cv=cv,
+            n_repeats=n_repeats,
+            compare_mode=compare_mode,
+            random_state=random_state)
 
     def get_successors(self, param: Dict[str, Any]) -> List[Dict[str, Any]]:
         # TODO:
@@ -64,7 +71,7 @@ class HillClimbingCV(BaseParameterSearch):
         y: Optional[np.ndarray] = None, 
         n_iter: int = 50) -> Tuple[BaseEstimator, Dict[str, Any]]:
         # initialize
-        best_param = self.get_initial(self.param_grid)
+        best_param = self.get_initial_point()
         best_score = self.calculate_heuristic(x, y, best_param)
         cv_results = {"grid": []}
         cv_results["grid"].append({"param": best_param, "score": best_score})

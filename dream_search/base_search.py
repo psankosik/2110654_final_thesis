@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Union, List
 
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold
 
 
@@ -39,7 +40,7 @@ class BaseParameterSearch(metaclass=ABCMeta):
         self.random_state = random_state
 
     def get_initial_point(self) -> Dict[str, Any]:
-        return {k: random.sample(v) for k, v in self.param_grid.items()}
+        return {k: random.sample(v, k=1)[0] for k, v in self.param_grid.items()}
 
     def calculate_heuristic(
         self, x: np.ndarray, y: np.ndarray, estimator_params: Dict[str, Any]) -> float:
@@ -47,7 +48,7 @@ class BaseParameterSearch(metaclass=ABCMeta):
         cv = RepeatedStratifiedKFold(
             n_splits=self.cv, n_repeats=self.n_repeats, random_state=self.random_state)
         scores = cross_val_score(
-            model, x, y, scoring=self.scoring, cv=cv, n_jobs=self.n_jobs)
+            model, x, y, scoring=make_scorer(self.scoring), cv=cv, n_jobs=self.n_jobs)
         return np.mean(scores)
 
     def search(self, x: np.ndarray, y: Optional[np.ndarray]):

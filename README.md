@@ -8,5 +8,5 @@ This package aims to apply various search algorithms to perform hyperparameter t
 *TBD*
 
 ## Author
-Chompakorn Chaksangchaichot
-Pongpanod Sankosik
+- Chompakorn Chaksangchaichot
+- Pongpanod Sankosik

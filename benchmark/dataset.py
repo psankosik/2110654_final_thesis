@@ -25,7 +25,7 @@ class DatasetLoader(object):
         label_encoder = LabelEncoder()
         x_train = scaler.fit_transform(x_train)
         y_train = label_encoder.fit_transform(y_train)
-        x_test = scaler.transform(y_train)
+        x_test = scaler.transform(x_test)
         y_test = label_encoder.transform(y_test)
 
         return x_train, y_train, x_test, y_test

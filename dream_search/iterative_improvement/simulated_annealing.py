@@ -18,10 +18,17 @@ class SimulatedAnnealingCV(HillClimbingCV):
         n_jobs: Optional[int] = None, 
         cv: Optional[int] = None, 
         n_repeats: int = 1, 
+        compare_mode: str = "max",
         random_state: int = 42) -> None:
         super().__init__(
-            estimator, param_grid, scoring, n_jobs, 
-            cv, n_repeats, random_state)
+            estimator=estimator,
+            param_grid=param_grid,
+            scoring=scoring,
+            n_jobs=n_jobs,
+            cv=cv,
+            n_repeats=n_repeats,
+            compare_mode=compare_mode,
+            random_state=random_state)
         self.initial_temp = initial_temp
         self.annealing_rate = annealing_rate
 
@@ -66,7 +73,7 @@ class SimulatedAnnealingCV(HillClimbingCV):
         self, x: np.ndarray, y: Optional[np.ndarray] = None, 
         n_iter: int = 50) -> Tuple[BaseEstimator, Dict[str, Any]]:
         # initialize
-        curr_param = self.get_initial(self.param_grid)
+        curr_param = self.get_initial_point()
         curr_score = self.calculate_heuristic(x, y, curr_param)
         cv_results = {"grid": []}
         cv_results["grid"].append({"param": curr_param, "score": curr_score})
@@ -76,7 +83,7 @@ class SimulatedAnnealingCV(HillClimbingCV):
         for i in range(n_iter):
             # iterate over successor nodes
             successors = self.get_successors(curr_param)
-            successor_scores = self.evaluate_successor(successors)
+            successor_scores = self.evaluate_successor(x, y, successors)
             assert len(successors) == len(successor_scores), \
                 f"Length of successors ({len(successors)}) and scores should match ({len(successor_scores)}"
             successor, successor_score = self.select_successors(
