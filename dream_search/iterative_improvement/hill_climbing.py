@@ -69,10 +69,16 @@ class HillClimbingCV(BaseParameterSearch):
                 possible_state.append(all_state_tmp)
             else:
                 current_index = all_state[key].index(value)
-                # TODO: limit out of index
-                lower_index = current_index-1
-                upper_index = current_index+1
-                possible_state.append([all_state[key][lower_index], all_state[key][upper_index]])
+                if current_index == 0:
+                    upper_index = current_index+1
+                    possible_state.append([all_state[key][upper_index]])
+                elif current_index == len(all_state[key])-1:
+                    lower_index = current_index-1
+                    possible_state.append([all_state[key][lower_index]])
+                else:
+                    lower_index = current_index-1
+                    upper_index = current_index+1
+                    possible_state.append([all_state[key][lower_index], all_state[key][upper_index]])
 
         all_successsor = self.generate_all_combination(possible_state, list(param.keys()))
 
