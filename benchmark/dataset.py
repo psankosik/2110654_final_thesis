@@ -35,14 +35,15 @@ class DatasetLoader(object):
         dataset_url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
         dataset = pd.read_csv(dataset_url)
 
+        dataset = dataset.drop(['Name', 'Ticket', 'Cabin' ], axis=1).dropna()
         dataset = pd.concat([
             dataset,
             pd.get_dummies(dataset.Sex, prefix='Sex'), 
             pd.get_dummies(dataset.Embarked, prefix='Embarked')
             ])
-        dataset = dataset.drop(['Name', 'Sex', 'Ticket', 'Cabin', 'Embarked'], axis=1)
 
-        # TODO: Deal with missing value
+        dataset = dataset.drop(['Sex','Embarked'], axis=1)
+
         train = dataset.iloc[:-100, 1:]
         test = dataset.iloc[-100:, 1:]
 
