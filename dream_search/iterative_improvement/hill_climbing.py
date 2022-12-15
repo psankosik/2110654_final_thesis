@@ -1,5 +1,6 @@
 import random
 from typing import Any, Dict, Optional, Union, List, Tuple
+from itertools import product
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -30,9 +31,52 @@ class HillClimbingCV(BaseParameterSearch):
             compare_mode=compare_mode,
             random_state=random_state)
 
-    def get_successors(self, param: Dict[str, Any]) -> List[Dict[str, Any]]:
-        # TODO:
-        pass
+
+    def generate_all_combination(item, key):
+        def flatten(nestedList):
+            if not(bool(nestedList)):
+                return nestedList
+            if isinstance(nestedList[0], tuple):
+                return flatten(*nestedList[:1]) + flatten(nestedList[1:])
+
+            return nestedList[:1] + flatten(nestedList[1:])
+
+        current = item[0]
+        for i in range(1,len(item)):
+            current = list(product(current, item[i]))
+
+        result = []
+        for i in current:
+            result.append(flatten(i))
+
+        final_result = []
+        for item in result:
+            tmp = []
+            for count, j in enumerate(item):
+                tmp.append({key[count-1]: j})
+            
+            final_result.append(tmp)
+        return final_result
+
+    def get_successors(self, param: Dict[str, Any], all_state: Dict[str, Any]) -> List[Dict[str, Any]]:
+        possible_state = []
+
+        for key in list(param.keys()):
+            value = param[key]
+            if type(value) == str or bool:
+                all_state_tmp = all_state[key].copy()
+                all_state_tmp.remove(value)
+                possible_state.append(all_state_tmp)
+            else:
+                current_index = all_state[key].index(value)
+                # TODO: limit out of index
+                lower_index = current_index-1
+                upper_index = current_index+1
+                possible_state.append([all_state[key][lower_index], all_state[key][upper_index]])
+
+        all_successsor = self.generate_all_combination(possible_state, list(param.keys()))
+
+        return all_successsor
 
     def evaluate_successor(
         self, x: np.ndarray, y: np.ndarray, params: List[Dict[str, Any]]) -> List[float]:
