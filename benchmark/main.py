@@ -27,20 +27,25 @@ def main():
     }
 
     model_grid = {
-        # "n_estimators": [],
-        "criterion": ["gini", "entropy"],
-        # "max_depth": [],
-        # "min_samples_split": [],
-        # "min_samples_leaf": [],
-        # "min_weight_fraction_leaf": [],
-        "max_features": ["sqrt", "log2", None],
-        # "max_leaf_nodes": [],
-        # "min_impurity_decrease": [],
+        "n_estimators": list(range(10, 110, 10)),  # 10
+        "criterion": ["gini", "entropy"],  # 2
+        "max_depth": [5, 10, 20, 50, 100, None],  # 6
+        "min_samples_split": [2, 4, 6, 8, 10],  # 5
+        "min_samples_leaf": [1, 2, 3, 4, 5],  # 5
+        "min_weight_fraction_leaf": [1, 2, 3, 4, 5],  # 5
+        "max_features": ["sqrt", "log2", None],  # 3
+        "max_leaf_nodes": [5, 10, 50, 100, 150, 200, None],  # 7
+        "min_impurity_decrease": [0., 0.1, 0.2, 0.3, 0.4, 0.5],  # 6
     }
+
+    total_space_size = 1.
+    for v in model_grid.values():
+        total_space_size *= len(v)
+    print(f"Total parameter search space: {int(total_space_size)}")
 
     compared_alg = {
         "grid_search": {"cls": GridSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
-        "random_search": {"cls": RandomizedSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
+        "random_search": {"cls": RandomizedSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1, "n_iter": 20000}},  # n_iter around 10% of all possible space
         "hill_climbing": {"cls": HillClimbingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "simulated_annealing": {"cls": SimulatedAnnealingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
     }
