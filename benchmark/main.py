@@ -7,6 +7,7 @@ import pathlib
 lib_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "..")
 sys.path.append(lib_path)
 
+import numpy as np
 from dataset import DatasetLoader
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
@@ -21,9 +22,8 @@ N_ITER = 50
 
 def main():
     dataset = {
-        # "house_price": {"data": DatasetLoader.load_house_price(), "metric": accuracy_score, "model_cls": RandomForestClassifier},
         "iris": {"data": DatasetLoader.load_iris(), "metric": accuracy_score, "model_cls": RandomForestClassifier},
-        # "titanic": {"data": DatasetLoader.load_titanic(), "metric": accuracy_score, "model_cls": RandomForestClassifier}
+        "titanic": {"data": DatasetLoader.load_titanic(), "metric": accuracy_score, "model_cls": RandomForestClassifier}
     }
 
     model_grid = {
@@ -41,13 +41,17 @@ def main():
     compared_alg = {
         "grid_search": {"cls": GridSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "random_search": {"cls": RandomizedSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
-        # "hill_climbing": {"cls": HillClimbingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
+        "hill_climbing": {"cls": HillClimbingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "simulated_annealing": {"cls": SimulatedAnnealingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
     }
 
     benchmark_results = {dset: {alg: None for alg in compared_alg.keys()} for dset in dataset.keys()}
     for dset_name, data_info in dataset.items():
         x_train, y_train, x_test, y_test = data_info["data"]
+        assert (x_train == np.nan).astype(float).sum() == 0
+        assert (x_test == np.nan).astype(float).sum() == 0
+        assert (y_train == np.nan).astype(float).sum() == 0
+        assert (y_test == np.nan).astype(float).sum() == 0
         model_cls = data_info["model_cls"]
         for search_alg, search_item in compared_alg.items():
             search_cls = search_item["cls"]

@@ -7,13 +7,10 @@ from sklearn.model_selection import train_test_split
 class DatasetLoader(object):
 
     @staticmethod
-    def load_house_price():
-        pass
-
-    @staticmethod
     def load_iris():
         dataset_url = "https://gist.githubusercontent.com/netj/8836201/raw/6f9306ad21398ea43cba4f7d537619d0e07d5ae3/iris.csv"
         dataset = pd.read_csv(dataset_url)
+        dataset = dataset.dropna()
 
         train, test = train_test_split(dataset, test_size=0.2, stratify=dataset["variety"], random_state=1234)
 
@@ -35,14 +32,18 @@ class DatasetLoader(object):
         dataset_url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
         dataset = pd.read_csv(dataset_url)
 
-        dataset = dataset.drop(['Name', 'Ticket', 'Cabin' ], axis=1).dropna()
+        dataset = dataset.drop(['Name', 'Ticket', 'Cabin'], axis=1).dropna()
+        dataset = dataset.dropna()
+
+        # cat col
         dataset = pd.concat([
             dataset,
-            pd.get_dummies(dataset.Sex, prefix='Sex'), 
-            pd.get_dummies(dataset.Embarked, prefix='Embarked')
-            ])
-
+            pd.get_dummies(dataset["Sex"], prefix='Sex', drop_first=True), 
+            pd.get_dummies(dataset["Embarked"], prefix='Embarked', drop_first=True)
+        ], axis=1)
         dataset = dataset.drop(['Sex','Embarked'], axis=1)
+
+        assert dataset.isna().sum().sum() == 0, dataset.isna().sum().sum()
 
         train = dataset.iloc[:-100, 1:]
         test = dataset.iloc[-100:, 1:]
