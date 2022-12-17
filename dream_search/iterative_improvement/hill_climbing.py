@@ -32,6 +32,7 @@ class HillClimbingCV(BaseParameterSearch):
             random_state=random_state)
 
 
+    @staticmethod
     def generate_all_combination(item, key):
         def flatten(nestedList):
             if not(bool(nestedList)):
@@ -49,38 +50,52 @@ class HillClimbingCV(BaseParameterSearch):
         for i in current:
             result.append(flatten(i))
 
+        assert all(len(_item) == len(key) for _item in result)
+
         final_result = []
         for item in result:
-            tmp = []
-            for count, j in enumerate(item):
-                tmp.append({key[count]: j})
-            
-            final_result.append(tmp)
+            assert len(item) == len(key)
+            final_result.append({_k: _item for _item, _k in zip(item, key)})
+
         return final_result
 
-    def get_successors(self, param: Dict[str, Any], all_state: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def get_successors(self, param: Dict[str, Any]) -> List[Dict[str, Any]]:
         possible_state = []
+        all_state = self.param_grid.copy()
 
-        for key in list(param.keys()):
+        # iterate over current state keyword arguments
+        for key in param.keys():
+            # extract the value of current key
             value = param[key]
-            if type(value) == str or bool:
+            if isinstance(value, (str, bool)) or value is None:
+                # if the parameter is uncomparable (string, boolean, or None)
                 all_state_tmp = all_state[key].copy()
                 all_state_tmp.remove(value)
                 possible_state.append(all_state_tmp)
             else:
+                # if is comparable, get next step around current node value
+                # ensure that param grid is sorted
+                if None in all_state[key]:
+                    all_state[key] = sorted([_item for _item in all_state[key] if _item is not None]) + [None]
+                else:
+                    all_state[key] = sorted(all_state[key])
                 current_index = all_state[key].index(value)
+                
                 if current_index == 0:
-                    upper_index = current_index+1
+                    # if pointer at the first element, always choose second one
+                    upper_index = current_index + 1
                     possible_state.append([all_state[key][upper_index]])
                 elif current_index == len(all_state[key])-1:
+                    # select last one
                     lower_index = current_index-1
                     possible_state.append([all_state[key][lower_index]])
                 else:
+                    # randomly select neighbor
                     lower_index = current_index-1
                     upper_index = current_index+1
                     possible_state.append([all_state[key][lower_index], all_state[key][upper_index]])
 
-        all_successsor = self.generate_all_combination(possible_state, list(param.keys()))
+        all_successsor = HillClimbingCV.generate_all_combination(possible_state, list(param.keys()))
 
         return all_successsor
 
@@ -129,7 +144,7 @@ class HillClimbingCV(BaseParameterSearch):
         for i in range(n_iter):
             # iterate over successor nodes
             successors = self.get_successors(best_param)
-            successor_scores = self.evaluate_successor(successors)
+            successor_scores = self.evaluate_successor(x, y, successors)
             assert len(successors) == len(successor_scores), \
                 f"Length of successors ({len(successors)}) and scores should match ({len(successor_scores)}"
             successor, successor_score = self.select_successors(successors, successor_scores, best_score)
