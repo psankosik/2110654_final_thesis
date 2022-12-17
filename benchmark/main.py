@@ -11,7 +11,7 @@ import numpy as np
 from dataset import DatasetLoader
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, make_scorer
 
 from dream_search.iterative_improvement import (HillClimbingCV,
                                                 SimulatedAnnealingCV)
@@ -32,7 +32,7 @@ def main():
         "max_depth": [5, 10, 20, 50, 100, None],  # 6
         "min_samples_split": [2, 4, 6, 8, 10],  # 5
         "min_samples_leaf": [1, 2, 3, 4, 5],  # 5
-        "min_weight_fraction_leaf": [1, 2, 3, 4, 5],  # 5
+        "min_weight_fraction_leaf": [0.1, 0.2, 0.3, 0.4, 0.5],  # 5
         "max_features": ["sqrt", "log2", None],  # 3
         "max_leaf_nodes": [5, 10, 50, 100, 150, 200, None],  # 7
         "min_impurity_decrease": [0., 0.1, 0.2, 0.3, 0.4, 0.5],  # 6
@@ -44,14 +44,15 @@ def main():
     print(f"Total parameter search space: {int(total_space_size)}")
 
     compared_alg = {
-        "grid_search": {"cls": GridSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "random_search": {"cls": RandomizedSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1, "n_iter": 20000}},  # n_iter around 10% of all possible space
         "hill_climbing": {"cls": HillClimbingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "simulated_annealing": {"cls": SimulatedAnnealingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
+        "grid_search": {"cls": GridSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
     }
 
     benchmark_results = {dset: {alg: None for alg in compared_alg.keys()} for dset in dataset.keys()}
     for dset_name, data_info in dataset.items():
+        print(f">>Computing {dset_name}...")
         x_train, y_train, x_test, y_test = data_info["data"]
         assert (x_train == np.nan).astype(float).sum() == 0
         assert (x_test == np.nan).astype(float).sum() == 0
@@ -59,17 +60,18 @@ def main():
         assert (y_test == np.nan).astype(float).sum() == 0
         model_cls = data_info["model_cls"]
         for search_alg, search_item in compared_alg.items():
+            print(f"Running {search_alg}...")
             search_cls = search_item["cls"]
 
             if search_alg in ["grid_search", "random_search"]:
                 # sklearn standard
                 if search_alg == "grid_search":
                     search = search_cls(
-                        scoring=data_info["metric"], param_grid=model_grid, 
+                        scoring=make_scorer(data_info["metric"]), param_grid=model_grid, 
                         estimator=model_cls(), **search_item["param"])
                 elif search_alg == "random_search":
                     search = search_cls(
-                        scoring=data_info["metric"], param_distributions=model_grid, 
+                        scoring=make_scorer(data_info["metric"]), param_distributions=model_grid, 
                         estimator=model_cls(), **search_item["param"])
                 else:
                     raise NameError()
