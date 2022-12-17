@@ -75,8 +75,12 @@ class HillClimbingCV(BaseParameterSearch):
             else:
                 # if is comparable, get next step around current node value
                 # ensure that param grid is sorted
-                all_state[key] = sorted(all_state[key])
+                if None in all_state[key]:
+                    all_state[key] = sorted([_item for _item in all_state[key] if _item is not None]) + [None]
+                else:
+                    all_state[key] = sorted(all_state[key])
                 current_index = all_state[key].index(value)
+                
                 if current_index == 0:
                     # if pointer at the first element, always choose second one
                     upper_index = current_index + 1
