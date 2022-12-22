@@ -12,6 +12,7 @@ from dataset import DatasetLoader
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.metrics import accuracy_score, make_scorer
+from skopt import BayesSearchCV
 
 from dream_search.iterative_improvement import (HillClimbingCV,
                                                 SimulatedAnnealingCV)
@@ -45,9 +46,10 @@ def main():
 
     compared_alg = {
         "random_search": {"cls": RandomizedSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1, "n_iter": 20000}},  # n_iter around 10% of all possible space
+        "bayesian": {"cls": BayesSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "hill_climbing": {"cls": HillClimbingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
         "simulated_annealing": {"cls": SimulatedAnnealingCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
-        "grid_search": {"cls": GridSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
+        # "grid_search": {"cls": GridSearchCV, "param": {"cv": N_FOLD, "n_jobs": -1}},
     }
 
     benchmark_results = {dset: {alg: None for alg in compared_alg.keys()} for dset in dataset.keys()}
@@ -73,6 +75,11 @@ def main():
                     search = search_cls(
                         scoring=make_scorer(data_info["metric"]), param_distributions=model_grid, 
                         estimator=model_cls(), **search_item["param"])
+                elif search_alg == "bayesian":
+                    search = search_cls(
+                        scoring=make_scorer(data_info["metric"], search_spaces=model_grid,
+                        estimator=model_cls(), **search_item["param"])
+                    )
                 else:
                     raise NameError()
 
