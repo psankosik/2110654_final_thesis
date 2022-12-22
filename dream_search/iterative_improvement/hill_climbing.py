@@ -99,8 +99,7 @@ class HillClimbingCV(BaseParameterSearch):
 
         return all_successsor
 
-    def evaluate_successor(
-        self, x: np.ndarray, y: np.ndarray, params: List[Dict[str, Any]]) -> List[float]:
+    def evaluate_successor(elf, x: np.ndarray, y: np.ndarray, params: List[Dict[str, Any]]) -> List[float]:
         return [
             self.calculate_heuristic(x, y, param)
             for param in params]
